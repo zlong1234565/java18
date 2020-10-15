@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.8.5/themes/icon.css">
+    <script type="text/javascript" src="jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+
+</head>
+<body>
+<script type="text/javascript">
+    var url;
+    $(function(){
+        $('#dg').datagrid({
+            url:'/showEmp',
+            pagination:'true',
+            rownumbers:'true',
+            singleSelect:'true',
+            pageList:[2,4,6,8,10],
+            columns:[[
+                {field:'empno',title:'编号',width:100,hidden:'true'},
+                {field:'ename',title:'姓名',width:100},
+                {field:'job',title:'岗位',width:100,align:'right'}
+                ,
+                {field:'mgr',title:'领导编号',width:100,align:'right'}
+                ,
+                {field:'hiredate',title:'入职时间',width:100,align:'right'}
+                ,
+                {field:'sal',title:'工资',width:100,align:'right'}
+                ,
+                {field:'comm',title:'奖金',width:100,align:'right'}
+                ,
+                {field:'deptno',title:'部门编号',width:100,align:'right'}
+            ]],
+            toolbar: [{
+                iconCls: 'icon-add',
+                handler: function(){
+                    //$('#dlg').dialog('open');
+                    $('#dlg').dialog('open').dialog('setTitle','添加员工');
+                    $('#fm').form('clear');
+                    url = '/addEmp';
+                }
+            },'-',{
+                iconCls: 'icon-edit',
+                handler: function(){
+                    var row = $('#dg').datagrid('getSelected');
+                    if (row){
+                        $('#dlg').dialog('open').dialog('setTitle','修改员工');
+                        $('#fm').form('load',row);
+                        url ="/upEmp";
+                    }else{
+                        $.messager.alert('警告','请选择一行');
+                    }
+                }
+            },'-',{
+                iconCls: 'icon-cancel',
+                handler: function(){
+                    var row = $('#dg').datagrid('getSelected');
+                    if (row){
+                        $.messager.confirm('Confirm','确定要删除吗？',function(r){
+                            if (r){
+                                $.post('/delEmp/',{empno:row.empno},function(result){
+                                    if (result.success){
+                                        $('#dg').datagrid('reload');	// reload the user data
+                                    } else {
+                                        $.messager.show({	// show error message
+                                            title: 'Error',
+                                            msg: result.errorMsg
+                                        });
+                                    }
+                                },'json');
+
+
+                            }
+                            $('#dg').datagrid('reload');
+                        });
+                    }else{
+                        $.messager.alert('警告','请选择一行');
+                    }
+                }
+            },'-',{
+                iconCls: 'icon-search',
+                handler: function(){alert('查看按钮')}
+            }]
+
+        });
+
+    });
+
+    function saveUser(){
+        $('#fm').form('submit',{
+            url: url,
+            onSubmit: function(){
+                return $(this).form('validate');
+            },
+            success: function(result){
+                if(result=='success'){
+                    //弹出框
+                    $.messager.show({
+                        title:'系统提示',
+                        msg:'操作成功',
+                        timeout:3000,
+                        showType:'slide'
+                    });
+                    //关闭当前添加窗口
+                    $('#dlg').dialog('close');
+                    //刷新
+                    $('#dg').datagrid('reload');
+                }
+
+
+            }
+        });
+    }
+
+
+</script>
+<table id="dg"></table>
+
+<div id="dlg" class="easyui-dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-buttons'">
+    <form id="fm" method="post" novalidate style="margin:0;padding:20px 50px">
+        <input name="empno"  class="easyui-textbox" type="hidden" class="easyui-textbox">
+        <h3>编辑用户</h3>
+        <div style="margin-bottom:10px">
+            <input name="ename" class="easyui-textbox" required="true"  validType="email" label="姓名:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="job" class="easyui-textbox" required="true" label="岗位:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="mgr" class="easyui-textbox" required="true" label="领导编号:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="hiredate" class="easyui-textbox" type="date" required="true"  label="入职时间:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="sal" class="easyui-textbox" required="true" label="薪水:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="comm" class="easyui-textbox" required="true" label="奖金:" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="deptno" class="easyui-textbox" required="true" label="部门编号:" style="width:100%">
+        </div>
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveUser()" style="width:90px">提交</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#dlg').dialog('close')" style="width:90px">取消</a>
+</div>
+
+</body>
+</html>
